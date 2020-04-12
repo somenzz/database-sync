@@ -1,23 +1,36 @@
 # table-sync
 
 #### 介绍
-传入一定的参数，即可在相同或不同的数据库间进行表的同步，包括表结构的同步及数据的同步。作业的调试工具进行调度，本项目旨在提供一种数据库间表同步的通用工具
+传入一定的参数，即可在相同或不同的数据库间进行表的同步，包括表结构的同步及数据的同步。作业的调试工具进行调度，本项目旨在提供一种数据库间表同步的通用工具。
+
+目前项目正在开发中，欢迎感兴趣的朋友一起加入。
 
 #### 软件架构
-软件架构说明
+
+- 数据库的信息写在配置文件中，计划支持各种主流关系型数据库，如 MysqL、Db2、Oracle、PostgreSQL。
+- 假如程序名称叫 table-sync，计划运行方式是这样的：
+
+```shell
+
+# 全量更新
+java -jar table-sync.jar --from=mysqldb1.table1 --to=db2db1.table2 
+
+# 按日期增量更新
+java -jar table-sync.jar --from=mysqldb1.table1 --to=db2db1.table2 --where="data_date='YYYY-MM-DD'"
+
+```
+
+- 如果源数据库的表结构变化了，可以选择自动更新表结构，默认不自动更新
+
+```sh
+# 自动更新表结构
+java -jar table-sync.jar --from=mysqldb1.table1 --to=db2db1.table2 --autoDDL=true
+
+```
 
 
-#### 安装教程
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
 
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
 
 #### 参与贡献
 
@@ -26,12 +39,3 @@
 3.  提交代码
 4.  新建 Pull Request
 
-
-#### 码云特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5.  码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
