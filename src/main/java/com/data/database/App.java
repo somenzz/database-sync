@@ -32,15 +32,15 @@ public final class App {
 
         try {
             DataSync ds = new MySql(JDBC_DRIVER, DB_URL, USER, PASS);
-            List<String> columns = ds.getTableColumns("iphone_contacts");
+            List<String> columns = ds.getTableColumns("aarondb","iphone_contacts");
             for(String cl : columns){
                 System.out.println(cl);
             }
-            System.out.println(ds.getDDL("iphone_contacts"));
-            ResultSet rs = ds.readData("iphone_contacts" , columns, null);
+            System.out.println(ds.getDDL("mysql","aarondb","iphone_contacts",5));
+            // ResultSet rs = ds.readData("iphone_contacts" , columns, null);
 
-            DataSync ds2 = new MySql(JDBC_DRIVER, DB_URL, USER, PASS);
-            ds2.writeData("iphone_contacts2", columns, rs, "1=1");
+            // DataSync ds2 = new MySql(JDBC_DRIVER, DB_URL, USER, PASS);
+            // ds2.writeData("iphone_contacts2", columns, rs, "1=1");
 
             // int numberOfcols = rs.getMetaData().getColumnCount();
             // while (rs.next()){

@@ -49,31 +49,14 @@ public class MySql implements DataSync {
         this.dbConn = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPass);
     }
 
-    public List<String> getTableColumns(final String tableName) {
+    public List<String> getTableColumns(String schemaName,final String tableName) {
         System.out.println("getTableColumns");
         final List<String> columnNames = new ArrayList<>();
-        // try {
-        // PreparedStatement pStemt = conn.prepareStatement("select * from " + tableName
-        // + " limit 1");
-        // // 结果集元数据
-        // ResultSetMetaData rsmd = pStemt.getMetaData();
-        // // 表列数
-        // int size = rsmd.getColumnCount();
-        // for (int i = 0; i < size; i++) {
-        // columnNames.add(rsmd.getColumnName(i + 1));
-        // }
-        // } catch (SQLException e) {
-        // System.out.println("getColumnNames failure: " + e);
-        // } finally {
-        // System.out.println("getColumnNames finally");
-        // }
-
-        // select COLUMN_NAME from information_schema.columns where TABLE_NAME = 'user'
-        // and table_schema = 'kjt' ORDER BY ORDINAL_POSITION;
         try {
             final PreparedStatement pStemt = this.dbConn.prepareStatement(
-                    "select COLUMN_NAME from information_schema.columns where TABLE_NAME = ? ORDER BY ORDINAL_POSITION");
-            pStemt.setObject(1, tableName);
+                    "select COLUMN_NAME from information_schema.columns where TABLE_SCHEMA= ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION");
+            pStemt.setObject(1, schemaName);
+            pStemt.setObject(2, tableName);
             try (ResultSet rs = pStemt.executeQuery()) {
                 while (rs.next()) {
                     columnNames.add(rs.getString(1));
@@ -89,7 +72,7 @@ public class MySql implements DataSync {
     };
 
     /* 判断一个表是否存在 */
-    public boolean existsTable(final String tableName) {
+    public boolean existsTable(String schemaName, final String tableName) {
         System.out.println("existsTable");
 
         // select count(1) from information_schema.tables where TABLE_NAME = 'user' and
@@ -97,8 +80,9 @@ public class MySql implements DataSync {
 
         try {
             final PreparedStatement pStemt = this.dbConn
-                    .prepareStatement("select count(1) from information_schema.tables where TABLE_NAME = ? ");
-            pStemt.setObject(1, tableName);
+                    .prepareStatement("select count(1) from information_schema.tables where TABLE_SCHEMA= ? AND  TABLE_NAME = ? ");
+            pStemt.setObject(1, schemaName);
+            pStemt.setObject(2, tableName);
             try (ResultSet rs = pStemt.executeQuery()) {
                 while (rs.next()) {
                     if (rs.getInt(1) > 0) {
@@ -116,28 +100,45 @@ public class MySql implements DataSync {
 
     };
 
-    /* 获取一个表的 DDL 语句，用于在目标数据库创建表 */
-    public String getDDL(final String tableName) throws SQLException {
-
+    /* 获取一个表的 DDL 语句，用于在目标数据库创建表 lenSize 默认值 1*/
+    public String getDDL(String dbType, String schemaName,final String tableName, int lenSize) throws SQLException {
+        assert(lenSize >= 1 && lenSize <= 3);
         System.out.println("getDDL");
-        final String sql = "show create table " + tableName;
-        final PreparedStatement pStemt = this.dbConn.prepareStatement(sql);
+
+        StringBuilder sb = new StringBuilder(1024);
+        sb.append("create table " + tableName + "(\n");
+        final PreparedStatement pStemt = this.dbConn.prepareStatement(
+                "select COLUMN_NAME,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,COLUMN_TYPE from information_schema.columns where TABLE_SCHEMA = ? AND  TABLE_NAME = ? ORDER BY ORDINAL_POSITION");
+        pStemt.setString(1, schemaName);
+        pStemt.setString(2, tableName);
         final ResultSet rs = pStemt.executeQuery();
-        rs.next();
-        final String ddl = rs.getString(2);
+        while (rs.next()){
+            String colunmName = rs.getString(1);
+            String dataType = rs.getString(2);
+            String columnType = rs.getString(4);
+            if (dataType == "varchar" || dataType == "char"){
+                int columnLength = rs.getInt(3);
+                columnType = "varchar(" + columnLength*lenSize + ")";
+            }
+            sb.append(colunmName);
+            sb.append(' ');
+            sb.append(columnType);
+            sb.append(", \n");
+        }
+        final String ddl = sb.toString();
         return ddl;
 
     };
 
     /* 获取一个表的数据，采用流式读取，可以提供 whereClause 表示增量读取 ，如果 whereClause 为空，表示全量读取 */
-    public ResultSet readData(final String tableName, final List<String> columnNames, String whereClause)
+    public ResultSet readData(String schemaName,final String tableName, final List<String> columnNames, String whereClause)
             throws SQLException {
         System.out.println("readData");
         final String columns = Joiner.on(", ").join(columnNames);
         if (whereClause == null) {
             whereClause = "1 = 1";
         }
-        final String selectSql = "select " + columns + " from " + tableName + " where " + whereClause;
+        final String selectSql = "select " + columns + " from " + schemaName + "." + tableName + " where " + whereClause;
         System.out.println(selectSql);
         PreparedStatement pStemt = null;
         pStemt = this.dbConn.prepareStatement(selectSql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -148,22 +149,23 @@ public class MySql implements DataSync {
     };
 
     /* 将 ResultSet 类型的数据定入一张表，写入成功返回 true,否则返回 false */
-    public boolean writeData(final String tableName, final List<String> columnNames, final ResultSet rs,
+    public boolean writeData(String schemaName, final String tableName, final List<String> columnNames, final ResultSet rs,
             final String whereClause) throws SQLException {
         System.out.println("writeData");
 
         String clearSql = "";
+        String tbName = schemaName + "." + tableName;
         if (whereClause != null) {
-            clearSql = "delete from " + tableName + " where " + whereClause;
+            clearSql = "delete from " + tbName + " where " + whereClause;
         } else {
-            clearSql = "truncate table " + tableName;
+            clearSql = "truncate table " + tbName;
         }
 
         PreparedStatement pStemt = this.dbConn.prepareStatement(clearSql);
         pStemt.executeUpdate();
         System.out.println("数据清理完毕。");
 
-        final String insertSql = Tools.buildInsertSql(tableName, columnNames.stream().toArray(String[]::new));
+        final String insertSql = Tools.buildInsertSql(tbName, columnNames.stream().toArray(String[]::new));
         // System.out.println(insertSql);
         pStemt = this.dbConn.prepareStatement(insertSql);
         final int numberOfcols = rs.getMetaData().getColumnCount();
@@ -180,7 +182,7 @@ public class MySql implements DataSync {
                 for (int i : pStemt.executeBatch()) {
                     affectRows += i;
                 }
-                System.out.println("Rows inserted into table " + tableName + ": " + affectRows);
+                System.out.println("Rows inserted into table " + tbName + ": " + affectRows);
                 rowCount = 0;
             }
         }
@@ -189,7 +191,7 @@ public class MySql implements DataSync {
         for (int i : pStemt.executeBatch()) {
             affectRows += i;
         }
-        System.out.println("Rows inserted into table " + tableName + ":" + affectRows);
+        System.out.println("Rows inserted into table " + tbName + ": " + affectRows);
         rowCount = 0;
 
         System.out.println("数据插入完毕。");
@@ -197,7 +199,7 @@ public class MySql implements DataSync {
     };
 
     /* 执行提供的 ddl 建表 */
-    public boolean createTable(final String tableName, final String ddl) throws SQLException {
+    public boolean createTable(String schemaName, final String tableName, final String ddl) throws SQLException {
         System.out.println("createTable");
         final PreparedStatement pStemt = this.dbConn.prepareStatement(ddl);
         final int number = pStemt.executeUpdate();
