@@ -1,9 +1,19 @@
 package com.data.database;
 
+import java.io.File;
+import java.io.Reader;
 import java.sql.*;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import com.data.database.api.DataSync;
-import com.data.database.api.impl.*;
+import com.data.database.api.impl.DataBaseSync;
 import java.util.List;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.data.database.api.MyEnum.ColSizeTimes;
 
 /**
  * Hello world!
@@ -20,39 +30,70 @@ public final class App {
      * @throws ClassNotFoundException
      * @throws SQLException
      */
+
+    /**
+     * 读取json文件，返回json串
+     *
+     * @param fileName
+     * @return
+     */
+    public static String readJsonFile(String fileName) {
+        String jsonStr = "";
+        try {
+            File jsonFile = new File(fileName);
+            Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
+            int ch = 0;
+            StringBuffer sb = new StringBuffer();
+            while ((ch = reader.read()) != -1) {
+                sb.append((char) ch);
+            }
+            reader.close();
+            jsonStr = sb.toString();
+            return jsonStr;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
 
-        // 注册 JDBC 驱动
-        // 打开链接
-        String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-        String DB_URL = "jdbc:mysql://localhost:3306/aarondb?useSSL=false&characterEncoding=utf8&serverTimezone=UTC";
-        String USER = "aaron";
-        String PASS = "aaron";
+        // System.out.println(System.getProperty("user.dir"));
+        JSONObject jobj = JSON.parseObject(readJsonFile("config.json"));
+        String fromJDBC_DRIVER = jobj.getJSONObject("wbsj").getString("driver");
+        String fromDB_URL = jobj.getJSONObject("wbsj").getString("url");
+        String fromUSER = jobj.getJSONObject("wbsj").getString("user");
+        String fromPASS = jobj.getJSONObject("wbsj").getString("password");
+        String fromType = jobj.getJSONObject("wbsj").getString("type");
 
+        String toJDBC_DRIVER = jobj.getJSONObject("postgres").getString("driver");
+        String toDB_URL = jobj.getJSONObject("postgres").getString("url");
+        String toUSER = jobj.getJSONObject("postgres").getString("user");
+        String toPASS = jobj.getJSONObject("postgres").getString("password");
+        String toType = jobj.getJSONObject("postgres").getString("type");
 
         try {
-            DataSync ds = new MySql(JDBC_DRIVER, DB_URL, USER, PASS);
-            List<String> columns = ds.getTableColumns("aarondb","iphone_contacts");
-            for(String cl : columns){
-                System.out.println(cl);
-            }
-            System.out.println(ds.getDDL("mysql","aarondb","iphone_contacts",5));
-            // ResultSet rs = ds.readData("iphone_contacts" , columns, null);
-
-            // DataSync ds2 = new MySql(JDBC_DRIVER, DB_URL, USER, PASS);
-            // ds2.writeData("iphone_contacts2", columns, rs, "1=1");
-
-            // int numberOfcols = rs.getMetaData().getColumnCount();
-            // while (rs.next()){
-            //     for(int i=1; i <= numberOfcols;i++){
-            //         System.out.print(rs.getObject(i));
-            //         System.out.print('\t');
-            //     }
-            //     System.out.println();
-
+            DataSync fromDataBase = new DataBaseSync(fromType,fromJDBC_DRIVER, fromDB_URL, fromUSER, fromPASS);
+            DataSync toDataBase = new DataBaseSync(toType,toJDBC_DRIVER, toDB_URL, toUSER, toPASS);
+            // List<String> cols = ds.getTableColumns("SYSCAT", "TABLES");
+            // String ddl = ds.getDDL("mysql","apidb","user",ColSizeTimes.DOUBLE);
+            // for (String col : cols) {
+            // System.out.println(col);
             // }
+            String schemaName = "WBSJ";
+            String tableName = "TD_RISKDETAIL";
+            String whereClause = null;
 
-        }finally{
+            if (!toDataBase.existsTable(schemaName, tableName)) {
+                String ddl = fromDataBase.getDDL(toType, schemaName, tableName, ColSizeTimes.EQUAL);
+                System.out.println(ddl);
+                toDataBase.createTable(schemaName, tableName, ddl);
+            }
+            System.out.println(tableName);
+            List<String> columnNames = toDataBase.getTableColumns(schemaName, tableName);
+            ResultSet rs = fromDataBase.readData(schemaName, tableName, columnNames, whereClause);
+            toDataBase.writeData(schemaName, tableName, columnNames, rs, whereClause);
+        } finally {
         }
     }
 }

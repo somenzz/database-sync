@@ -2,12 +2,27 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.data.database</groupId>
     <artifactId>database-sync</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <repositories>
+        <!-- 192.168.0.201远程仓库 -->
+        <repository>
+            <id>maven_nexus_201</id>
+            <name>maven_nexus_201</name>
+            <layout>default</layout>
+            <url>https://artifacts.alfresco.com/nexus/content/repositories/public/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -23,9 +38,43 @@
         </dependency>
 
         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>28.2-jre</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.47</version>
+        </dependency>
+
+<!--
+            <dependency>
+              <groupId>org.apache.logging.log4j</groupId>
+              <artifactId>log4j-api</artifactId>
+              <version>2.13.1</version>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.logging.log4j</groupId>
+              <artifactId>log4j-core</artifactId>
+              <version>2.13.1</version>
+            </dependency> -->
+
+
+        <!-- https://mvnrepository.com/artifact/com.ibm.db2.jcc/db2jcc4 -->
+        <dependency>
+            <groupId>com.ibm.db2.jcc</groupId>
+            <artifactId>db2jcc4</artifactId>
+            <version>10.1</version>
+            <scope>runtime</scope>
         </dependency>
 
 
@@ -53,6 +102,7 @@
                         <configLocation>com/github/ngeor/checkstyle.xml</configLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     </configuration>
+
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -71,6 +121,44 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.1</version>
             </plugin>
+
+            <!--dependency plugin test start-->
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.data.database.App</mainClass>
+                        </manifest>
+                    </archive>
+                     <!-- 过滤掉不希望包含在jar中的文件  -->
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
     <reporting>

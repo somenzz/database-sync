@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 
+import com.alibaba.fastjson.parser.deserializer.SqlDateDeserializer;
+import com.data.database.api.MyEnum.ColSizeTimes;
 import java.util.List;
 
 
@@ -16,10 +18,10 @@ public interface DataSync {
     获取一个表的列名，用于 readData 时指定一个表的字段，之所以不使用 * 是因为源数据库表的字段有可能新增，
     也可以用于表结构的自动同步：当目标表的字段数少于源表时，对目标表自动执行 alter table add columns xxx
     */
-    public List<String> getTableColumns(String schemaName,String tableName) ;
+    public List<String> getTableColumns(String schemaName,String tableName) throws SQLException ;
 
     /*判断一个表是否存在*/
-    public boolean existsTable(String schemaName,String tableName) ;
+    public boolean existsTable(String schemaName,String tableName) throws SQLException;
 
 
     /**
@@ -29,7 +31,7 @@ public interface DataSync {
     * @param dbType :mysql,db2,postgres,oracle
     * @version 1.2
     */
-    public String getDDL(String dbType,String schemaName,String tableName,int lenSize) throws SQLException;
+    public String getDDL(String dbType,String schemaName,String tableName,ColSizeTimes lenSize) throws SQLException;
 
     /*获取一个表的数据，采用流式读，可以提供 whereClause 表示增量读取 ，如果 whereClause 为空，表示全量读取*/
     public ResultSet readData(String schemaName, String tableName,List<String> columnNames,String whereClause) throws SQLException ;
