@@ -15,10 +15,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.data.database.api.MyEnum.ColSizeTimes;
 
+// import org.apache.logging.log4j.Logger;
+// import org.apache.logging.log4j.LogManager;
+
+import org.apache.log4j.Logger;
+
 /**
  * Hello world!
  */
 public final class App {
+
+    private static final Logger logger = Logger.getLogger(App.class);
 
     private App() {
     }
@@ -32,7 +39,7 @@ public final class App {
      */
 
     /**
-     * 读取json文件，返回json串
+     * * 读取json文件，返回json串
      *
      * @param fileName
      * @return
@@ -58,42 +65,72 @@ public final class App {
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
 
-        // System.out.println(System.getProperty("user.dir"));
-        JSONObject jobj = JSON.parseObject(readJsonFile("config.json"));
-        String fromJDBC_DRIVER = jobj.getJSONObject("wbsj").getString("driver");
-        String fromDB_URL = jobj.getJSONObject("wbsj").getString("url");
-        String fromUSER = jobj.getJSONObject("wbsj").getString("user");
-        String fromPASS = jobj.getJSONObject("wbsj").getString("password");
-        String fromType = jobj.getJSONObject("wbsj").getString("type");
+        String currentPath = System.getProperty("user.dir");
+        logger.info("current path: "+currentPath);
+        if (args.length < 6) {
+            System.out.println(
+                    "Usage: \njava -jar database-sync-1.0.jar {fromDB} {fromSchema} {fromTable} {toDB} {toSchema} {toTable} [whereClause]");
+            return;
+        }
 
-        String toJDBC_DRIVER = jobj.getJSONObject("postgres").getString("driver");
-        String toDB_URL = jobj.getJSONObject("postgres").getString("url");
-        String toUSER = jobj.getJSONObject("postgres").getString("user");
-        String toPASS = jobj.getJSONObject("postgres").getString("password");
-        String toType = jobj.getJSONObject("postgres").getString("type");
+        String fromDb = args[0];
+        String fromSchema = args[1];
+        String fromTable = args[2];
+        String toDb = args[3];
+        String toSchema = args[4];
+        String toTable = args[5];
+        String whereClause = args.length == 7 ? args[6] : null;
 
+        // String fromDb = "wbsj";
+        // String fromSchema = "wbsj";
+        // String fromTable = "zz_test";
+        // String toDb = "postgres";
+        // String toSchema = "wbsj";
+        // String toTable = "zz_test";
+        // String whereClause = null;
+
+        JSONObject jobj = JSON.parseObject(readJsonFile("./config/config.json"));
+        String fromJDBC_DRIVER = jobj.getJSONObject(fromDb).getString("driver");
+        String fromDB_URL = jobj.getJSONObject(fromDb).getString("url");
+        String fromUSER = jobj.getJSONObject(fromDb).getString("user");
+        String fromPASS = jobj.getJSONObject(fromDb).getString("password");
+        String fromType = jobj.getJSONObject(fromDb).getString("type");
+
+        String toJDBC_DRIVER = jobj.getJSONObject(toDb).getString("driver");
+        String toDB_URL = jobj.getJSONObject(toDb).getString("url");
+        String toUSER = jobj.getJSONObject(toDb).getString("user");
+        String toPASS = jobj.getJSONObject(toDb).getString("password");
+        String toType = jobj.getJSONObject(toDb).getString("type");
+
+        logger.info(
+                String.format("begin %s.%s.%s -> %s.%s.%s", fromDb, fromSchema, fromTable, toDb, toSchema, toTable));
         try {
-            DataSync fromDataBase = new DataBaseSync(fromType,fromJDBC_DRIVER, fromDB_URL, fromUSER, fromPASS);
-            DataSync toDataBase = new DataBaseSync(toType,toJDBC_DRIVER, toDB_URL, toUSER, toPASS);
+            DataSync fromDataBase = new DataBaseSync(fromType, fromJDBC_DRIVER, fromDB_URL, fromUSER, fromPASS);
+            DataSync toDataBase = new DataBaseSync(toType, toJDBC_DRIVER, toDB_URL, toUSER, toPASS);
             // List<String> cols = ds.getTableColumns("SYSCAT", "TABLES");
             // String ddl = ds.getDDL("mysql","apidb","user",ColSizeTimes.DOUBLE);
             // for (String col : cols) {
             // System.out.println(col);
             // }
-            String schemaName = "WBSJ";
-            String tableName = "TD_RISKDETAIL";
-            String whereClause = null;
 
-            if (!toDataBase.existsTable(schemaName, tableName)) {
-                String ddl = fromDataBase.getDDL(toType, schemaName, tableName, ColSizeTimes.EQUAL);
+            // 如果来自 edw 由于是 gbk 编码，因此自动长度扩大两倍。
+
+            ColSizeTimes colTimes = fromDb.equals("edw") ? ColSizeTimes.DOUBLE : ColSizeTimes.EQUAL;
+
+            if (!toDataBase.existsTable(toSchema, toTable)) {
+                String ddl = fromDataBase.getDDL(toType, fromSchema, fromTable, colTimes);
                 System.out.println(ddl);
-                toDataBase.createTable(schemaName, tableName, ddl);
+                toDataBase.createTable(toSchema, toTable, ddl);
             }
-            System.out.println(tableName);
-            List<String> columnNames = toDataBase.getTableColumns(schemaName, tableName);
-            ResultSet rs = fromDataBase.readData(schemaName, tableName, columnNames, whereClause);
-            toDataBase.writeData(schemaName, tableName, columnNames, rs, whereClause);
+            List<String> columnNames = toDataBase.getTableColumns(toSchema, toTable);
+            ResultSet rs = fromDataBase.readData(fromSchema, fromTable, columnNames, whereClause);
+            toDataBase.writeData(toSchema, toTable, columnNames, rs, whereClause);
+            logger.info(String.format("finished %s.%s.%s -> %s.%s.%s", fromDb, fromSchema, fromTable, toDb, toSchema,
+                    toTable));
+            // DataBaseSync clear = (DataBaseSync) toDataBase;
+            // clear.dropTable(toSchema,toTable);
         } finally {
+
         }
     }
 }

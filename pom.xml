@@ -12,16 +12,40 @@
     <repositories>
         <!-- 192.168.0.201远程仓库 -->
         <repository>
-            <id>maven_nexus_201</id>
-            <name>maven_nexus_201</name>
+            <id>maven_nexus</id>
+            <name>maven_nexus</name>
             <layout>default</layout>
             <url>https://artifacts.alfresco.com/nexus/content/repositories/public/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+
+        <repository>
+            <id>maven.oracle.com</id>
+            <name>oracle-maven-repo</name>
+            <url>https://maven.oracle.com</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+        </repository>
+
     </repositories>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven.oracle.com</id>
+            <name>oracle-maven-repo</name>
+            <url>https://maven.oracle.com</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencies>
         <dependency>
@@ -56,18 +80,30 @@
             <version>1.2.47</version>
         </dependency>
 
-<!--
-            <dependency>
-              <groupId>org.apache.logging.log4j</groupId>
-              <artifactId>log4j-api</artifactId>
-              <version>2.13.1</version>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.logging.log4j</groupId>
-              <artifactId>log4j-core</artifactId>
-              <version>2.13.1</version>
-            </dependency> -->
 
+        <!-- <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.13.1</version>
+        </dependency> -->
+
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.oracle.jdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>19.3.0.0</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.ibm.db2.jcc/db2jcc4 -->
         <dependency>
@@ -106,6 +142,7 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -137,7 +174,7 @@
                             <mainClass>com.data.database.App</mainClass>
                         </manifest>
                     </archive>
-                     <!-- 过滤掉不希望包含在jar中的文件  -->
+                    <!-- 过滤掉不希望包含在jar中的文件  -->
                 </configuration>
             </plugin>
 
@@ -158,7 +195,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
     <reporting>

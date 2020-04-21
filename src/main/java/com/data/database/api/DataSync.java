@@ -1,10 +1,8 @@
 package com.data.database.api;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 
-import com.alibaba.fastjson.parser.deserializer.SqlDateDeserializer;
 import com.data.database.api.MyEnum.ColSizeTimes;
 import java.util.List;
 
