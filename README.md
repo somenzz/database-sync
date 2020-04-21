@@ -45,8 +45,8 @@ fromDb 是指配置在 config.json 的数据库信息，假如有以下配置文
 
 - fromSchema 读取数据的表的模式名，可以填写 "".
 - fromTable 读取数据的表明，必须提供。
-- toSchema 写入数据表的模式名，可以填写 "".
-- toTable 写入数据表的表名，必须提供，当写入表不存在时，自动按读取表的表结构创建。
+- toSchema 写入数据表的模式名，可以填写 ""，可以和 fromSchema 不同.
+- toTable 写入数据表的表名，必须提供，当写入表不存在时，自动按读取表的表结构创建，可以和 fromTable 不同。
 
 数据在写入前会自动清理，每 100000 条记录读取一次，写入一次，对于上亿的数据量，也不会占有大内存。
 
@@ -55,7 +55,6 @@ fromDb 是指配置在 config.json 的数据库信息，假如有以下配置文
 ```sh
 java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} {toTable} [whereClause]
 ```
-
 与全量更新的唯一区别是可以提供 where 条件，程序按 where 条件自动清理数据，写入数据。
 
 #### 编写目的
