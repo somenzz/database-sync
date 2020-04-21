@@ -8,14 +8,13 @@ java 程序编写，真正跨平台。
 
 目前项目 demo 已经可以使用 ，欢迎感兴趣的朋友一起加入。
 
-#### 软件架构
+#### 程序的使用
 
-- 数据库的信息写在配置文件中，计划支持各种主流关系型数据库，如 MysqL、Db2、Oracle、PostgreSQL。
-- 假如程序名称叫 database-sync，计划运行方式是这样的：
+数据库的信息写在配置文件中，计划支持各种主流关系型数据库，如 MysqL、Db2、Oracle、PostgreSQL。
 
-```shell
+程序名称叫 database-sync，运行方式是这样的：
 
-# 全量更新
+#### 全量更新
 ```sh
 java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} {toTable}
 ```
@@ -52,16 +51,16 @@ fromDb 是指配置在 config.json 的数据库信息，假如有以下配置文
 数据在写入前会自动清理，每 100000 条记录读取一次，写入一次，对于上亿的数据量，也不会占有大内存。
 
 
-# 增量更新
+#### 增量更新
 ```sh
 java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} {toTable} [whereClause]
 ```
 
 与全量更新的唯一区别是可以提供 where 条件，程序按 where 条件自动清理数据，写入数据。
 
-# 程序的目的
+#### 编写目的
 
-数据库间表的同步，如果是轻加工，就丢掉低效的 datastage 和 kettle 吧。
+提高数据库间表的同步效率，如果是轻加工，就丢掉低效的 datastage 和 kettle 吧。
 
 #### 参与贡献
 
