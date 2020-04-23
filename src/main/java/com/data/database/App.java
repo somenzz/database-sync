@@ -80,8 +80,11 @@ public final class App {
         String toDb = args[3];
         String toSchema = args[4];
         String toTable = args[5];
-        String whereClause = args.length == 7 ? args[6] : null;
+        String whereClause = args.length == 7 ? args[6] : "";
 
+        whereClause = whereClause.replaceAll("(?i)where", "");
+
+        logger.info(String.format("Your input params are:\nfromDb = %-10s\tfromSchema = %-10s\tfromTable = %-10s\ntoDb = %-10s\ttoSchema = %-10s\ttoTable = %-10s\nwhereClause=%-10s", fromDb,fromSchema,fromTable,toDb,toSchema,toTable,whereClause));
         // String fromDb = "wbsj";
         // String fromSchema = "wbsj";
         // String fromTable = "zz_test";

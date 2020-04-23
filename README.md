@@ -65,3 +65,4 @@ java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} 
 
 1. 张慧峰
 2. 施云霄
+3. 高鹏
