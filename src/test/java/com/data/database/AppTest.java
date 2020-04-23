@@ -6,12 +6,10 @@ import org.junit.BeforeClass;
 import org.junit.AfterClass;
 
 import static org.junit.Assert.*;
-import com.data.database.api.impl.*;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 /**
  * Unit test for simple App.
  */
@@ -35,7 +33,20 @@ public class AppTest {
     }
 
     @Test
-    public void testMySql(){
+    public void testMySql() {
+        System.out.println("===============");
+        StringWriter ws = new StringWriter(100);
+        ws.write("str1111111");
+        System.out.println(ws.toString());
+        System.out.println(ws.getBuffer().length());
+        ws.getBuffer().setLength(4);
+        System.out.println(ws.getBuffer().length());
+        System.out.println(ws.toString());
+        ws.write("str11222222211");
+        System.out.println(ws.toString());
+
+        System.out.println("===============");
+
         assertTrue(true);
     }
 

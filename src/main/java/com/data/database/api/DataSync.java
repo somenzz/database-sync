@@ -1,6 +1,7 @@
 package com.data.database.api;
 
 import java.sql.SQLException;
+import java.io.IOException;
 import java.sql.ResultSet;
 
 import com.data.database.api.MyEnum.ColSizeTimes;
@@ -36,7 +37,7 @@ public interface DataSync {
 
     /* 将 ResultSet 类型的数据定入一张表，写入成功返回 true,否则返回 false*/
 
-    public boolean writeData(String schemaName, String tableName,List<String> columnNames, ResultSet rs, String whereClause) throws SQLException ;
+    public boolean writeData(String schemaName, String tableName,List<String> columnNames, ResultSet rs, String whereClause) throws IOException, SQLException ;
 
     /* 执行提供的 ddl 建表*/
     public boolean createTable(String schemaName, String tableName,String ddl) throws SQLException;
