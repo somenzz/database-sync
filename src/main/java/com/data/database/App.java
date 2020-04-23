@@ -64,10 +64,10 @@ public final class App {
         }
     }
 
-    public static void main(String[] args) throws ClassNotFoundException, IOException,SQLException {
+    public static void main(String[] args) throws ClassNotFoundException, IOException, SQLException {
 
         String currentPath = System.getProperty("user.dir");
-        logger.info("current path: "+currentPath);
+        logger.info("current path: " + currentPath);
         if (args.length < 6) {
             System.out.println(
                     "Usage: \njava -jar database-sync-1.0.jar {fromDB} {fromSchema} {fromTable} {toDB} {toSchema} {toTable} [whereClause]");
@@ -82,9 +82,17 @@ public final class App {
         String toTable = args[5];
         String whereClause = args.length == 7 ? args[6] : "";
 
+        if (fromDb.equalsIgnoreCase(toDb) && fromSchema.equalsIgnoreCase(toSchema)
+                && fromTable.equalsIgnoreCase(toTable)) {
+            System.out.println("You don't need to do that.");
+            return;
+        }
+
         whereClause = whereClause.replaceAll("(?i)where", "");
 
-        logger.info(String.format("Your input params are:\nfromDb = %-10s\tfromSchema = %-10s\tfromTable = %-10s\ntoDb = %-10s\ttoSchema = %-10s\ttoTable = %-10s\nwhereClause=%-10s", fromDb,fromSchema,fromTable,toDb,toSchema,toTable,whereClause));
+        logger.info(String.format(
+                "Your input params are:\nfromDb = %-10s\tfromSchema = %-10s\tfromTable = %-10s\ntoDb = %-10s\ttoSchema = %-10s\ttoTable = %-10s\nwhereClause=%-10s",
+                fromDb, fromSchema, fromTable, toDb, toSchema, toTable, whereClause));
         // String fromDb = "wbsj";
         // String fromSchema = "wbsj";
         // String fromTable = "zz_test";
@@ -106,15 +114,18 @@ public final class App {
         String toPASS = jobj.getJSONObject(toDb).getString("password");
         String toType = jobj.getJSONObject(toDb).getString("type");
 
+        Integer bufferRows = (Integer) jobj.getOrDefault("buffer-rows", 100000);
+
         logger.info(
                 String.format("begin %s.%s.%s -> %s.%s.%s", fromDb, fromSchema, fromTable, toDb, toSchema, toTable));
         try {
-            DataSync fromDataBase = new DataBaseSync(fromType, fromJDBC_DRIVER, fromDB_URL, fromUSER, fromPASS);
+            DataSync fromDataBase = new DataBaseSync(fromType, fromJDBC_DRIVER, fromDB_URL, fromUSER, fromPASS,
+                    bufferRows);
             DataSync toDataBase = null;
-            if ("postgres".equals(toType) || "elk".equals(toType)){
-                toDataBase = new PostgresDataBaseSync(toType, toJDBC_DRIVER, toDB_URL, toUSER, toPASS);
-            }else{
-                toDataBase = new DataBaseSync(toType, toJDBC_DRIVER, toDB_URL, toUSER, toPASS);
+            if ("postgres".equals(toType) || "elk".equals(toType)) {
+                toDataBase = new PostgresDataBaseSync(toType, toJDBC_DRIVER, toDB_URL, toUSER, toPASS, bufferRows);
+            } else {
+                toDataBase = new DataBaseSync(toType, toJDBC_DRIVER, toDB_URL, toUSER, toPASS, bufferRows);
             }
             // List<String> cols = ds.getTableColumns("SYSCAT", "TABLES");
             // String ddl = ds.getDDL("mysql","apidb","user",ColSizeTimes.DOUBLE);
