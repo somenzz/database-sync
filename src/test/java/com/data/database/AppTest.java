@@ -44,6 +44,7 @@ public class AppTest {
         System.out.println(ws.toString());
         ws.write("str11222222211");
         System.out.println(ws.toString());
+        System.out.println(String.format("%.2f", 12312312*1.0/1000));
 
         System.out.println("===============");
 
