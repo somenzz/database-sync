@@ -38,12 +38,17 @@ public class AppTest {
     @Test
     public void testMySql() throws SQLException, ClassNotFoundException {
         System.out.println("===============");
+        String s = "23234\ndfadsf\tadfasdfasdf\rfasfa";
+        System.out.println(s);
+        s = s.replaceAll("[\\t\\n\\r]", "");
+        System.out.println(s);
+        String s1 = String.format("11%c%c22", (char)2,(char)3);
+        System.out.println(s1);
         // StringWriter sw = new StringWriter();
-        int count = 10000;
-        StringBuilder sBulider1 = new StringBuilder();
-        StringBuilder sBulider2 = new StringBuilder();
+        // int count = 10000;
+        // StringBuilder sBulider2 = new StringBuilder();
         // StringBuffer sBuffer = new StringBuffer();
-        double begin, end;
+        // double begin, end;
         // begin = System.currentTimeMillis();
         // for (int i =0;i< count;i++){
         // sw.write("10000"+i+'\n');
@@ -57,27 +62,27 @@ public class AppTest {
         // end=System.currentTimeMillis();
         // System.out.println("sBuffer: "+(end-begin));
 
-        begin = System.currentTimeMillis();
-        for (int j = 0; j < 10000; j++) {
-            for (int i = 0; i < count; i++) {
-                sBulider2.append("10000" + i + '\n');
-            }
-            sBulider2.delete(0, sBulider2.length());
+        // begin = System.currentTimeMillis();
+        // for (int j = 0; j < 10000; j++) {
+        //     for (int i = 0; i < count; i++) {
+        //         sBulider2.append("10000" + i + '\n');
+        //     }
+        //     sBulider2.delete(0, sBulider2.length());
 
-        }
-        end = System.currentTimeMillis();
-        System.out.println("sBulider2: delete " + (end - begin));
+        // }
+        // end = System.currentTimeMillis();
+        // System.out.println("sBulider2: delete " + (end - begin));
 
-        begin = System.currentTimeMillis();
-        for (int j = 0; j < 10000; j++) {
-            for (int i = 0; i < count; i++) {
-                sBulider1.append("10000" + i + '\n');
-            }
-            sBulider1.setLength(0);
+        // begin = System.currentTimeMillis();
+        // for (int j = 0; j < 10000; j++) {
+        //     for (int i = 0; i < count; i++) {
+        //         sBulider1.append("10000" + i + '\n');
+        //     }
+        //     sBulider1.setLength(0);
 
-        }
-        end = System.currentTimeMillis();
-        System.out.println("sBulider1: set length " + (end - begin));
+        // }
+        // end = System.currentTimeMillis();
+        // System.out.println("sBulider1: set length " + (end - begin));
 
         System.out.println("===============");
         // String type = "mysql";
