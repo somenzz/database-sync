@@ -44,8 +44,8 @@ public class DataBaseSync implements DataSync {
         this.dbUser = dbUser;
         this.dbPass = dbPass;
         Class.forName(this.jdbcDriver);
-        if(this.jdbcDriver.equals("com.ibm.db2.jcc.DB2Driver")){
-            System.setProperty("db2.jcc.charsetDecoderEncoder","3");
+        if (this.jdbcDriver.equals("com.ibm.db2.jcc.DB2Driver")) {
+            System.setProperty("db2.jcc.charsetDecoderEncoder", "3");
         }
         this.dbConn = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPass);
         this.dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);// 读未提交
@@ -57,14 +57,16 @@ public class DataBaseSync implements DataSync {
         if (dbType.equals("postgres") || dbType.equals("elk")) {
             return colType.toUpperCase().replace("CLOB", "TEXT");
         } else if (dbType.equals("db2") || dbType.equals("edw")) {
-            return colType.toUpperCase().replace("INT4", "INTEGER");
+            return colType.toUpperCase().replace("INT4", "INTEGER").replace("TEXT", "CLOB").replace("SERIAL",
+                    "INTEGER");
         } else if (dbType.equals("oracle")) {
             return colType.toUpperCase().replace("VARCHAR", "VARCHAR2");
         }
         return colType;
     }
-    public ResultSet getColMetaData(String schemaName,String tableName) throws SQLException {
-        //to do 如果源表与目标表不一致，则以愿表为准，修改目标表：
+
+    public ResultSet getColMetaData(String schemaName, String tableName) throws SQLException {
+        // to do 如果源表与目标表不一致，则以愿表为准，修改目标表：
         // 用于 扩字段长度，增加字段，删除字段，修改字段类型。
         if (this.dbType.equals("postgres") || this.dbType.equals("elk")) {
             if (schemaName != null) {
@@ -87,6 +89,7 @@ public class DataBaseSync implements DataSync {
         return resultSet;
 
     }
+
     public List<Integer> getColumnTypes(String schemaName, String tableName) throws SQLException {
         List<Integer> colTypes = new ArrayList<>();
         if (this.dbType.equals("postgres") || this.dbType.equals("elk")) {
@@ -299,9 +302,9 @@ public class DataBaseSync implements DataSync {
         if (table_remark != null && !table_remark.isEmpty()) {
             table_remark = table_remark.replace(";", "").replace("'", "");
             if (dbType.equals("mysql")) {
-                sb.append("alter table #tabname# comment '" + table_remark + "';");
+                sb.append("alter table #tabname# comment '" + table_remark + "';\n");
             } else {
-                sb.append("comment on table #tabname# is '" + table_remark + "';");
+                sb.append("comment on table #tabname# is '" + table_remark + "';\n");
             }
 
         }
@@ -347,10 +350,10 @@ public class DataBaseSync implements DataSync {
             tbName = tableName;
         }
         if (whereClause != null && !whereClause.isEmpty()) {
-            //如果 whereClause 不为空
+            // 如果 whereClause 不为空
             clearSql = "delete from " + tbName + " where " + whereClause;
         } else {
-            //如果 whereClause 为空
+            // 如果 whereClause 为空
             clearSql = "truncate table " + tbName;
             if (dbType.equals("db2") || dbType.equals("edw")) {
                 clearSql = clearSql + " immediate";
@@ -378,7 +381,8 @@ public class DataBaseSync implements DataSync {
         long starttime = System.currentTimeMillis();
         while (rs.next()) {
             for (int i = 0; i < numberOfcols; i++) {
-                if (colTypes.get(i) == Types.VARCHAR || colTypes.get(i) == Types.CHAR || colTypes.get(i) == Types.CLOB) {
+                if (colTypes.get(i) == Types.VARCHAR || colTypes.get(i) == Types.CHAR
+                        || colTypes.get(i) == Types.CLOB) {
                     pStemt.setString(i + 1, Objects.toString(rs.getString(i + 1), "")); // 将 null 转化为空
                 } else {
                     pStemt.setObject(i + 1, rs.getObject(i + 1));

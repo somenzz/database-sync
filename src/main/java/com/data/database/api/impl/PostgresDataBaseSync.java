@@ -7,9 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
+
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
-
 
 public class PostgresDataBaseSync extends DataBaseSync {
 
@@ -56,17 +57,28 @@ public class PostgresDataBaseSync extends DataBaseSync {
         // String[] rowArray = new String[numberOfcols];
         int rowCount = 0;
         StringBuilder sBuilder = new StringBuilder(bufferRows);
-        String copyFromSql = String.format(
-                "copy %s from stdin csv delimiter e'\\x02' quote e'\\x03' escape e'\\x03'",
+        String copyFromSql = String.format("copy %s from stdin csv delimiter e'\\x02' quote e'\\x03' escape e'\\x03' ",
                 tbName);
         long starttime = System.currentTimeMillis();
-        String delemiter = String.format("%c%c%c", (char) 3, (char) 2, (char) 3);
+        // String delemiter = String.format("%c%c%c", (char) 3, (char) 2, (char) 3);
         while (rs.next()) {
-            sBuilder.append((char) 3);
             for (int i = 0; i < numberOfcols - 1; i++) {
-                sBuilder.append(rs.getString(i + 1)).append(delemiter);
+                String col = rs.getString(i + 1);
+                if (col != null) {
+                    sBuilder.append((char) 3).append(col).append((char) 3);
+                } else {
+                    sBuilder.append("");
+                }
+                sBuilder.append((char) 2);
             }
-            sBuilder.append(rs.getString(numberOfcols)).append((char) 3).append('\n'); //此处不必考虑字段内是否含有换行符。
+
+            String col = rs.getString(numberOfcols);
+            if (col != null) {
+                sBuilder.append((char) 3).append(col).append((char) 3);
+            } else {
+                sBuilder.append("");
+            }
+            sBuilder.append('\n');
 
             rowCount++;
             if (rowCount >= bufferRows) {

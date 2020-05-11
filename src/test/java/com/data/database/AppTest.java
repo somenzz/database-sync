@@ -38,6 +38,17 @@ public class AppTest {
     @Test
     public void testMySql() throws SQLException, ClassNotFoundException {
         System.out.println("===============");
+        StringBuilder sb = new StringBuilder();
+        sb.append("first");
+        sb.append("|");
+        sb.append("");
+        sb.append("|");
+        String s_null = new String();
+        System.out.println(String.valueOf(s_null));
+        sb.append(s_null);
+        sb.append("|");
+        sb.append("last");
+        System.out.println(sb.toString());
         String s = "23234\ndfadsf\tadfasdfasdf\rfasfa";
         System.out.println(s);
         s = s.replaceAll("[\\t\\n\\r]", "");
