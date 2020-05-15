@@ -65,7 +65,12 @@ public class PostgresDataBaseSync extends DataBaseSync {
             for (int i = 0; i < numberOfcols - 1; i++) {
                 String col = rs.getString(i + 1);
                 if (col != null) {
-                    sBuilder.append((char) 3).append(col).append((char) 3);
+                    //去除字符串中最后的\\
+                    int col_len = col.length();
+                    while (col_len > 0 && col.charAt(col_len - 1) == '\\') {
+                        col_len-- ;
+                    }
+                    sBuilder.append((char) 3).append(col.substring(0, col_len)).append((char) 3);
                 } else {
                     sBuilder.append("");
                 }

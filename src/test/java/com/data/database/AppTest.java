@@ -53,8 +53,15 @@ public class AppTest {
         System.out.println(s);
         s = s.replaceAll("[\\t\\n\\r]", "");
         System.out.println(s);
-        String s1 = String.format("11%c%c22", (char)2,(char)3);
+        String s1 = String.format("11%c%c22", (char) 2, (char) 3);
         System.out.println(s1);
+        String col = "asdfadsf\\asfadsf\\\\\\\\";
+
+        int col_len = col.length();
+        while (col.charAt(col_len - 1) == '\\') {
+            col_len--;
+        }
+        System.out.println(col.substring(0, col_len));
         // StringWriter sw = new StringWriter();
         // int count = 10000;
         // StringBuilder sBulider2 = new StringBuilder();
@@ -75,10 +82,10 @@ public class AppTest {
 
         // begin = System.currentTimeMillis();
         // for (int j = 0; j < 10000; j++) {
-        //     for (int i = 0; i < count; i++) {
-        //         sBulider2.append("10000" + i + '\n');
-        //     }
-        //     sBulider2.delete(0, sBulider2.length());
+        // for (int i = 0; i < count; i++) {
+        // sBulider2.append("10000" + i + '\n');
+        // }
+        // sBulider2.delete(0, sBulider2.length());
 
         // }
         // end = System.currentTimeMillis();
@@ -86,10 +93,10 @@ public class AppTest {
 
         // begin = System.currentTimeMillis();
         // for (int j = 0; j < 10000; j++) {
-        //     for (int i = 0; i < count; i++) {
-        //         sBulider1.append("10000" + i + '\n');
-        //     }
-        //     sBulider1.setLength(0);
+        // for (int i = 0; i < count; i++) {
+        // sBulider1.append("10000" + i + '\n');
+        // }
+        // sBulider1.setLength(0);
 
         // }
         // end = System.currentTimeMillis();
