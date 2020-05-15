@@ -48,17 +48,22 @@ public class DataBaseSync implements DataSync {
             System.setProperty("db2.jcc.charsetDecoderEncoder", "3");
         }
         this.dbConn = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPass);
-        this.dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);// 读未提交
+        if ("oracle.jdbc.driver.OracleDriver".equals(this.jdbcDriver)) {
+            // 设置oracle的事务级别
+        } else {
+            // oracle 不支持脏读
+            this.dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);// 读未提交
+        }
         this.bufferRows = bufferRows;
         logger.info(this.dbType + " connection establied.");
     }
 
     public String convertColumnType(String dbType, String colType) {
         if (dbType.equals("postgres") || dbType.equals("elk")) {
-            return colType.toUpperCase().replace("CLOB", "TEXT");
+            return colType.toUpperCase().replace("CLOB", "TEXT").replace("VARCHAR2", "VARCHAR");
         } else if (dbType.equals("db2") || dbType.equals("edw")) {
-            return colType.toUpperCase().replace("INT4", "INTEGER").replace("TEXT", "CLOB").replace("SERIAL",
-                    "INTEGER");
+            return colType.toUpperCase().replace("INT4", "INTEGER").replace("TEXT", "CLOB").replace("SERIAL", "INTEGER")
+                    .replace("VARCHAR2", "VARCHAR");
         } else if (dbType.equals("oracle")) {
             return colType.toUpperCase().replace("VARCHAR", "VARCHAR2");
         }
