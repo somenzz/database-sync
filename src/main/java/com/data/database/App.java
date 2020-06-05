@@ -22,8 +22,6 @@ import com.data.database.api.MyEnum.ColSizeTimes;
 
 import org.apache.log4j.Logger;
 
-import oracle.ucp.common.waitfreepool.Factory;
-
 /**
  * Hello world!
  */
@@ -132,6 +130,8 @@ public final class App {
         System.out.println("        --help or -h     :print help info then exit");
         System.out.println(
                 "        --simple or -s   :use insert into table A select * from B mode, ignore table's structure");
+        System.out.println("        --from_fields={col1,col2} or -ff={col3,col4}   :specify from fields");
+        System.out.println("        --to_fields={col1,col2} or -tf={col3,col4}   :specify to fields");
 
     }
 
@@ -139,6 +139,8 @@ public final class App {
 
         boolean isSimple = false; /* 是否直接抽取数据，无需判断表结构信息差异 */
         ArrayList<String> argList = new ArrayList<>(); /* 真正用到的参数 */
+        ArrayList<String> toTableFields = new ArrayList<>(); /* 指定插入目标表哪些字段 */
+        ArrayList<String> fromTableFields = new ArrayList<>(); /* 指定插入目标表哪些字段 */
 
         for (String arg : args) {
             if ("--version".equals(arg) || "-v".equals(arg)) {
@@ -150,6 +152,16 @@ public final class App {
             } else if ("--simple".equals(arg) || "-s".equals(arg)) {
                 logger.info("use insert into table A select * from B mode.");
                 isSimple = true;
+            } else if (arg.startsWith("--to_fields=") || arg.startsWith("-tf=")) {
+                String fields = arg.replace("--to_fields=", "").replace("-tf=", "");
+                for (String s : fields.split(",")) {
+                    toTableFields.add(s);
+                }
+            } else if (arg.startsWith("--from_fields=") || arg.startsWith("-ff=")) {
+                String fields = arg.replace("--from_fields=", "").replace("-ff=", "");
+                for (String s : fields.split(",")) {
+                    fromTableFields.add(s);
+                }
             } else {
                 argList.add(arg);
             }
@@ -222,14 +234,25 @@ public final class App {
             // for (String col : cols) {
             // System.out.println(col);
             // }
+            List<String> fromColumnNames = new ArrayList<>();
+            List<String> toColumnNames = new ArrayList<>();
+
+            if (fromTableFields.size() > 0) {
+                fromColumnNames = fromTableFields;
+            } else {
+                fromColumnNames = toDataBase.getTableColumns(toSchema, toTable);
+            }
+
+            if (toTableFields.size() > 0) {
+                toColumnNames = toTableFields;
+            } else {
+                toColumnNames = toDataBase.getTableColumns(toSchema, toTable);
+            }
 
             if (isSimple) {
                 // 处理简单模式
-                List<String> columnNames = new ArrayList<>();
-                columnNames.add("*");
-                ResultSet rs = fromDataBase.readData(fromSchema, fromTable, columnNames, whereClause);
-                columnNames = toDataBase.getTableColumns(toSchema, toTable);
-                toDataBase.writeData(toSchema, toTable, columnNames, rs, whereClause);
+                ResultSet rs = fromDataBase.readData(fromSchema, fromTable, fromColumnNames, whereClause);
+                toDataBase.writeData(toSchema, toTable, toColumnNames, rs, whereClause);
                 logger.info(String.format("finished (%s)%s.%s -> (%s)%s.%s", fromDb, fromSchema, fromTable, toDb,
                         toSchema, toTable));
                 return;
@@ -269,9 +292,8 @@ public final class App {
                     }
                 }
             }
-            List<String> columnNames = toDataBase.getTableColumns(toSchema, toTable);
-            ResultSet rs = fromDataBase.readData(fromSchema, fromTable, columnNames, whereClause);
-            toDataBase.writeData(toSchema, toTable, columnNames, rs, whereClause);
+            ResultSet rs = fromDataBase.readData(fromSchema, fromTable, fromColumnNames, whereClause);
+            toDataBase.writeData(toSchema, toTable, toColumnNames, rs, whereClause);
             logger.info(String.format("finished (%s)%s.%s -> (%s)%s.%s", fromDb, fromSchema, fromTable, toDb, toSchema,
                     toTable));
             // DataBaseSync clear = (DataBaseSync) toDataBase;
