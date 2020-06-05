@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 
 import com.data.database.api.impl.DataBaseSync;
 import com.data.database.api.impl.PostgresDataBaseSync;
+
+import java.util.ArrayList;
 import java.util.List;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -19,6 +21,8 @@ import com.data.database.api.MyEnum.ColSizeTimes;
 // import org.apache.logging.log4j.LogManager;
 
 import org.apache.log4j.Logger;
+
+import oracle.ucp.common.waitfreepool.Factory;
 
 /**
  * Hello world!
@@ -70,7 +74,8 @@ public final class App {
             Integer colType = fromColumnMeta.getInt("DATA_TYPE");
 
             if (colType == Types.CHAR || colType == Types.VARCHAR) {// 处理字符串类型
-                if (fromColumnMeta.getInt("COLUMN_SIZE") * colSizeTimes.getTimes() != toColumnMeta.getInt("COLUMN_SIZE")) {
+                if (fromColumnMeta.getInt("COLUMN_SIZE") * colSizeTimes.getTimes() != toColumnMeta
+                        .getInt("COLUMN_SIZE")) {
                     if ("db2".equals(toType) || "edw".equals(toType)) {
                         sb.append(String.format("alter table %s.%s alter column %s set data type varchar(%d);",
                                 toSchema, toTable, fromColumnMeta.getString("COLUMN_NAME"),
@@ -119,23 +124,51 @@ public final class App {
         return sb.toString();
     }
 
+    public static void printHelp() {
+        System.out.println(
+                "Usage: \njava -jar database-sync-1.0.jar [options] {fromDB} {fromSchema} {fromTable} {toDB} {toSchema} {toTable} [whereClause]");
+        System.out.println("options:");
+        System.out.println("        --version or -v  :print version then exit");
+        System.out.println("        --help or -h     :print help info then exit");
+        System.out.println(
+                "        --simple or -s   :use insert into table A select * from B mode, ignore table's structure");
+
+    }
+
     public static void main(String[] args) throws ClassNotFoundException, IOException, SQLException {
 
-        String currentPath = System.getProperty("user.dir");
-        logger.info("current path: " + currentPath);
-        if (args.length < 6) {
-            System.out.println(
-                    "Usage: \njava -jar database-sync-1.0.jar {fromDB} {fromSchema} {fromTable} {toDB} {toSchema} {toTable} [whereClause]");
+        boolean isSimple = false; /* 是否直接抽取数据，无需判断表结构信息差异 */
+        ArrayList<String> argList = new ArrayList<>(); /* 真正用到的参数 */
+
+        for (String arg : args) {
+            if ("--version".equals(arg) || "-v".equals(arg)) {
+                System.out.println("database-sync v1.1");
+                return;
+            } else if ("--help".equals(arg) || "-h".equals(arg)) {
+                printHelp();
+                return;
+            } else if ("--simple".equals(arg) || "-s".equals(arg)) {
+                logger.info("use insert into table A select * from B mode.");
+                isSimple = true;
+            } else {
+                argList.add(arg);
+            }
+        }
+        if (argList.size() < 6) {
+            printHelp();
             return;
         }
 
-        String fromDb = args[0];
-        String fromSchema = args[1];
-        String fromTable = args[2];
-        String toDb = args[3];
-        String toSchema = args[4];
-        String toTable = args[5];
-        String whereClause = args.length == 7 ? args[6] : "";
+        String currentPath = System.getProperty("user.dir");
+        logger.info("current path: " + currentPath);
+
+        String fromDb = argList.get(0);
+        String fromSchema = argList.get(1);
+        String fromTable = argList.get(2);
+        String toDb = argList.get(3);
+        String toSchema = argList.get(4);
+        String toTable = argList.get(5);
+        String whereClause = argList.size() == 7 ? argList.get(6) : "";
 
         if (fromDb.equalsIgnoreCase(toDb) && fromSchema.equalsIgnoreCase(toSchema)
                 && fromTable.equalsIgnoreCase(toTable)) {
@@ -190,12 +223,25 @@ public final class App {
             // System.out.println(col);
             // }
 
-            // 如果来自 edw 由于是 gbk 编码，因此自动长度扩大两倍。
+            if (isSimple) {
+                // 处理简单模式
+                List<String> columnNames = new ArrayList<>();
+                columnNames.add("*");
+                ResultSet rs = fromDataBase.readData(fromSchema, fromTable, columnNames, whereClause);
+                columnNames = toDataBase.getTableColumns(toSchema, toTable);
+                toDataBase.writeData(toSchema, toTable, columnNames, rs, whereClause);
+                logger.info(String.format("finished (%s)%s.%s -> (%s)%s.%s", fromDb, fromSchema, fromTable, toDb,
+                        toSchema, toTable));
+                return;
+            }
 
+            // 如果来自 edw 由于是 gbk 编码，因此自动长度扩大两倍。
             ColSizeTimes colTimes = "gbk".equals(fromCoding) && "utf-8".equals(toCoding) ? ColSizeTimes.DOUBLE
                     : ColSizeTimes.EQUAL;
-            if (colTimes != ColSizeTimes.EQUAL){
-                logger.info(String.format("The varchar column length of target table is %d times that of the source table", colTimes.getTimes()));
+            if (colTimes != ColSizeTimes.EQUAL) {
+                logger.info(
+                        String.format("The varchar column length of target table is %d times that of the source table",
+                                colTimes.getTimes()));
             }
 
             if (!toDataBase.existsTable(toSchema, toTable)) {
@@ -210,6 +256,7 @@ public final class App {
 
                 ResultSet fromColMeta = fromDataBase.getColMetaData(fromSchema, fromTable);
                 ResultSet toColMeta = toDataBase.getColMetaData(toSchema, toTable);
+                /* 同步扩充字段长度 */
                 String alterSql = compareColMetaData(toType, toSchema, toTable, fromColMeta, toColMeta, colTimes);
                 for (String sql : alterSql.split(";")) {
                     if (!sql.isEmpty()) {
@@ -225,7 +272,7 @@ public final class App {
             List<String> columnNames = toDataBase.getTableColumns(toSchema, toTable);
             ResultSet rs = fromDataBase.readData(fromSchema, fromTable, columnNames, whereClause);
             toDataBase.writeData(toSchema, toTable, columnNames, rs, whereClause);
-            logger.info(String.format("finished %s.%s.%s -> %s.%s.%s", fromDb, fromSchema, fromTable, toDb, toSchema,
+            logger.info(String.format("finished (%s)%s.%s -> (%s)%s.%s", fromDb, fromSchema, fromTable, toDb, toSchema,
                     toTable));
             // DataBaseSync clear = (DataBaseSync) toDataBase;
             // clear.dropTable(toSchema,toTable);

@@ -1,7 +1,7 @@
 package com.data.database.utils;
 
 public class Tools {
-    public static String buildInsertSql(String table, String[] fields) {
+	public static String buildInsertSql(String table, String[] fields) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("INSERT INTO ").append(table).append(" (");
 		sb.append(String.join(", ", fields));

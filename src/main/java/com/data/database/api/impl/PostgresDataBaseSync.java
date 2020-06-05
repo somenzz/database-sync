@@ -56,6 +56,7 @@ public class PostgresDataBaseSync extends DataBaseSync {
         final int numberOfcols = rs.getMetaData().getColumnCount();
         // String[] rowArray = new String[numberOfcols];
         int rowCount = 0;
+        long totalAffectRows = 0;
         StringBuilder sBuilder = new StringBuilder(bufferRows);
         String copyFromSql = String.format("copy %s from stdin csv delimiter e'\\x02' quote e'\\x03' escape e'\\x03' ",
                 tbName);
@@ -97,6 +98,7 @@ public class PostgresDataBaseSync extends DataBaseSync {
                 // sBuilder.delete(0, sBuilder.length());//清空缓冲区
                 sBuilder.setLength(0);// 清空缓冲区
                 logger.info(String.format("rows insert into %s is %d", tbName, rowsInserted));
+                totalAffectRows += rowsInserted;
                 rowCount = 0;
             }
         }
@@ -107,10 +109,11 @@ public class PostgresDataBaseSync extends DataBaseSync {
         this.dbConn.commit();
         sBuilder.setLength(0);// 清空缓冲区
         logger.info(String.format("rows insert into %s is %d", tbName, rowsInserted));
+        totalAffectRows += rowsInserted;
         this.dbConn.setAutoCommit(true);
         long endtime = System.currentTimeMillis();
         logger.info(
-                String.format("insert into %s is done. cost %.3f seconds", tbName, (endtime - starttime) * 1.0 / 1000));
+                String.format("insert into %s %d rows is done. cost %.3f seconds", tbName, totalAffectRows,(endtime - starttime) * 1.0 / 1000));
         return true;
     };
 

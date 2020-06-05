@@ -383,6 +383,7 @@ public class DataBaseSync implements DataSync {
         pStemt = this.dbConn.prepareStatement(insertSql);
         final int numberOfcols = rs.getMetaData().getColumnCount();
         int rowCount = 0;
+        long totalAffectRows = 0;
         long starttime = System.currentTimeMillis();
         while (rs.next()) {
             for (int i = 0; i < numberOfcols; i++) {
@@ -403,6 +404,7 @@ public class DataBaseSync implements DataSync {
                 }
                 this.dbConn.commit();
                 logger.info(String.format("rows insert into %s is %d", tbName, affectRows));
+                totalAffectRows += affectRows;
                 rowCount = 0;
             }
         }
@@ -413,10 +415,11 @@ public class DataBaseSync implements DataSync {
         }
         this.dbConn.commit();
         logger.info(String.format("rows insert into %s is %d", tbName, affectRows));
+        totalAffectRows += affectRows;
         rowCount = 0;
         long endtime = System.currentTimeMillis();
         logger.info(
-                String.format("insert into %s is done. cost %.3f seconds", tbName, (endtime - starttime) * 1.0 / 1000));
+                String.format("insert into %s %d rows is done. cost %.3f seconds", tbName,totalAffectRows,(endtime - starttime) * 1.0 / 1000));
         return true;
     };
 
