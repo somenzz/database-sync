@@ -20,6 +20,17 @@ java 程序编写，真正跨平台。本程序的最大用处就是构建集市
 
 数据库的信息写在配置文件中，计划支持各种主流关系型数据库，如 MysqL、Db2、Oracle、PostgreSQL。
 
+程序运行前确保已安装 java 1.8 或后续版本，已经安装 maven，如果没有请安装一下，网上到处都是安装教程。
+然后 clone 源码，打包：
+
+```sh
+git clone https://gitee.com/somenzz/database-sync.git
+cd database-sync
+mvn package
+cd target
+java -jar database-sync-1.1.jar
+```
+
 程序名称叫 database-sync，运行方式是这样的：
 
 ```sh
