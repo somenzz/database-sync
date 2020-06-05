@@ -1,4 +1,4 @@
-# [database-sync](https://gitee.com/somenzz/table-sync)
+# [database-sync](https://gitee.com/somenzz/database-sync)
 
 ## 介绍
 
