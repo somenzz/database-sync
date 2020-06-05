@@ -98,7 +98,7 @@ java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} 
     "sjwb":{
         "type":"db2",
         "driver":"com.ibm.db2.jcc.DB2Driver",
-        "url":"jdbc:db2://192.168.1.230:50000/wbsj",
+        "url":"jdbc:db2://192.168.1.*:50000/wbsj",
         "user": "****",
         "password":"****",
         "encoding":"utf-8"
@@ -107,7 +107,7 @@ java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} 
     "dw_test":{
         "type":"db2",
         "driver":"com.ibm.db2.jcc.DB2Driver",
-        "url":"jdbc:db2://192.168.169.99:60620/edwdb",
+        "url":"jdbc:db2://192.168.169.*:60990/dwdb",
         "user": "****",
         "password":"****",
         "encoding":"gbk"
@@ -116,7 +116,7 @@ java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} 
     "postgres":{
         "type":"postgres",
         "driver":"org.postgresql.Driver",
-        "url":"jdbc:postgresql://10.99.66.39:5432/apidb",
+        "url":"jdbc:postgresql://10.99.**.**:5432/apidb",
         "user": "****",
         "password":"****",
         "encoding":"utf-8"
