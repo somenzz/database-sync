@@ -237,16 +237,18 @@ public final class App {
             List<String> fromColumnNames = new ArrayList<>();
             List<String> toColumnNames = new ArrayList<>();
 
-            if (fromTableFields.size() > 0) {
-                fromColumnNames = fromTableFields;
-            } else {
-                fromColumnNames = toDataBase.getTableColumns(toSchema, toTable);
-            }
-
             if (toTableFields.size() > 0) {
+                //如果指定目标列，则使用目标列，不指定则自动获取
                 toColumnNames = toTableFields;
             } else {
                 toColumnNames = toDataBase.getTableColumns(toSchema, toTable);
+            }
+
+            if (fromTableFields.size() > 0) {
+                //如果指定源列，则使用源列，不指定则 使用目标列
+                fromColumnNames = fromTableFields;
+            } else {
+                fromColumnNames = toColumnNames;
             }
 
             if (isSimple) {

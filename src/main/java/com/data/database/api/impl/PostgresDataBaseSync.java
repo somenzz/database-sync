@@ -61,10 +61,9 @@ public class PostgresDataBaseSync extends DataBaseSync {
         String copyFromSql = String.format("copy %s from stdin csv delimiter e'\\x02' quote e'\\x03' escape e'\\x03' ",
                 tbName);
         long starttime = System.currentTimeMillis();
-        // String delemiter = String.format("%c%c%c", (char) 3, (char) 2, (char) 3);
         while (rs.next()) {
             for (int i = 0; i < numberOfcols - 1; i++) {
-                String col = rs.getString(i + 1);
+                String col = rs.getString(i+1);
                 if (col != null) {
                     //去除字符串中最后的\\
                     int col_len = col.length();
@@ -77,15 +76,17 @@ public class PostgresDataBaseSync extends DataBaseSync {
                 }
                 sBuilder.append((char) 2);
             }
-
             String col = rs.getString(numberOfcols);
             if (col != null) {
-                sBuilder.append((char) 3).append(col).append((char) 3);
+                int col_len = col.length();
+                while (col_len > 0 && col.charAt(col_len - 1) == '\\') {
+                    col_len-- ;
+                }
+                sBuilder.append((char) 3).append(col.substring(0, col_len)).append((char) 3);
             } else {
                 sBuilder.append("");
             }
             sBuilder.append('\n');
-
             rowCount++;
             if (rowCount >= bufferRows) {
                 // 每10万行提交一次记录

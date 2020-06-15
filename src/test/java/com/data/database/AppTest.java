@@ -62,6 +62,7 @@ public class AppTest {
             col_len--;
         }
         System.out.println(col.substring(0, col_len));
+        System.out.println("12312312\nasdfads\n".replace("\n", ""));
         // StringWriter sw = new StringWriter();
         // int count = 10000;
         // StringBuilder sBulider2 = new StringBuilder();
