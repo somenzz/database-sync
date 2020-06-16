@@ -55,7 +55,8 @@ public class DataBaseSync implements DataSync {
             this.dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);// 读未提交
         }
         this.bufferRows = bufferRows;
-        logger.info(this.dbType + " connection establied.");
+        String ipAndPort = this.dbUrl.split("/")[2];
+        logger.info(ipAndPort + " connection establied.");
     }
 
     public String convertColumnType(String dbType, String colType) {
@@ -184,7 +185,6 @@ public class DataBaseSync implements DataSync {
         if (resultSet.next()) {
             return true;
         }
-        logger.info(String.format("table %s %s is not exists", schemaName, tableName));
         return false;
 
     };

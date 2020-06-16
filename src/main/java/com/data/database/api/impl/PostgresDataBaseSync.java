@@ -7,7 +7,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
 
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;

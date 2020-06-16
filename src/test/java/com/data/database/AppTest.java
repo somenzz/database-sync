@@ -31,12 +31,7 @@ public class AppTest {
     }
 
     @Test
-    public void testApp() {
-        assertTrue(true);
-    }
-
-    @Test
-    public void testMySql() throws SQLException, ClassNotFoundException {
+    public void testJava() {
         System.out.println("===============");
         StringBuilder sb = new StringBuilder();
         sb.append("first");
@@ -103,19 +98,26 @@ public class AppTest {
         // end = System.currentTimeMillis();
         // System.out.println("sBulider1: set length " + (end - begin));
 
+
+        assertTrue(true);
+    }
+
+    @Test
+    public void testApp() throws SQLException, ClassNotFoundException {
         System.out.println("===============");
-        // String type = "mysql";
-        // String driver = "com.mysql.cj.jdbc.Driver";
-        // String url =
-        // "jdbc:mysql://localhost:3306/aarondb?useSSL=false&characterEncoding=utf8&serverTimezone=UTC";
-        // String user = "aaron";
-        // String password = "aaron";
-        // DataBaseSync ds = new DataBaseSync(type,driver, url, user, password,null );
-        // DataBaseSync ds2 = new DataBaseSync(type,driver, url, user, password,null );
-        // ResultSet rsds1 = ds.getColMetaData("aarondb", "iphone_contacts");
-        // ResultSet rsds2 = ds2.getColMetaData("aarondb", "iphone_contacts2");
-        // App.compareColMetaData("mysql", "aarondb", "iphone_contacts2", rsds1, rsds2,
-        // MyEnum.ColSizeTimes.EQUAL);
+        String type = "mysql";
+        String driver = "com.mysql.cj.jdbc.Driver";
+        String url =
+        "jdbc:mysql://localhost:3306/aarondb?useSSL=false&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        System.out.println(url.split("/")[2]);
+        String user = "aaron";
+        String password = "aaron";
+        DataBaseSync ds = new DataBaseSync(type,driver, url, user, password,10000);
+        DataBaseSync ds2 = new DataBaseSync(type,driver, url, user, password,10000);
+        ResultSet rsds1 = ds.getColMetaData("aarondb", "iphone_contacts");
+        ResultSet rsds2 = ds2.getColMetaData("aarondb", "iphone_contacts2");
+        String sql = App.compareColMetaData("db2", "aarondb", "iphone_contacts2", rsds1, rsds2, MyEnum.ColSizeTimes.DOUBLE);
+        System.out.println(sql.replace(";","\n"));
         assertTrue(true);
     }
 
