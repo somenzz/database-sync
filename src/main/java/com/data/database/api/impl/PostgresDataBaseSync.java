@@ -52,16 +52,19 @@ public class PostgresDataBaseSync extends DataBaseSync {
         logger.info(String.format("clear data for %s is done", tbName));
 
         // List<Integer> colTypes = this.getColumnTypes(schemaName, tableName);
-        final int numberOfcols = rs.getMetaData().getColumnCount();
+        // final int numberOfcols = rs.getMetaData().getColumnCount();
+        final int numberOfCols = columnNames.size();
+        logger.info("numberOfcols = "+numberOfCols);
         // String[] rowArray = new String[numberOfcols];
         int rowCount = 0;
         long totalAffectRows = 0;
         StringBuilder sBuilder = new StringBuilder(bufferRows);
-        String copyFromSql = String.format("copy %s from stdin csv delimiter e'\\x02' quote e'\\x03' escape e'\\x03' ",
-                tbName);
+        String copyFromSql = String.format("copy %s (%s) from stdin csv delimiter e'\\x02' quote e'\\x03' escape e'\\x03' ",
+                tbName,String.join(",",columnNames));
+        logger.info("copyFromSql = "+copyFromSql);
         long starttime = System.currentTimeMillis();
         while (rs.next()) {
-            for (int i = 0; i < numberOfcols - 1; i++) {
+            for (int i = 0; i < numberOfCols - 1; i++) {
                 String col = rs.getString(i+1);
                 if (col != null) {
                     //去除字符串中最后的\\
@@ -75,7 +78,7 @@ public class PostgresDataBaseSync extends DataBaseSync {
                 }
                 sBuilder.append((char) 2);
             }
-            String col = rs.getString(numberOfcols);
+            String col = rs.getString(numberOfCols);
             if (col != null) {
                 int col_len = col.length();
                 while (col_len > 0 && col.charAt(col_len - 1) == '\\') {

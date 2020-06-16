@@ -381,12 +381,13 @@ public class DataBaseSync implements DataSync {
         final String insertSql = Tools.buildInsertSql(tbName, columnNames.stream().toArray(String[]::new));
         // System.out.println(insertSql);
         pStemt = this.dbConn.prepareStatement(insertSql);
-        final int numberOfcols = rs.getMetaData().getColumnCount();
+        // final int numberOfCols = rs.getMetaData().getColumnCount();
+        final int numberOfCols = columnNames.size();
         int rowCount = 0;
         long totalAffectRows = 0;
         long starttime = System.currentTimeMillis();
         while (rs.next()) {
-            for (int i = 0; i < numberOfcols; i++) {
+            for (int i = 0; i < numberOfCols; i++) {
                 if (colTypes.get(i) == Types.VARCHAR || colTypes.get(i) == Types.CHAR
                         || colTypes.get(i) == Types.CLOB) {
                     pStemt.setString(i + 1, Objects.toString(rs.getString(i + 1), "")); // 将 null 转化为空

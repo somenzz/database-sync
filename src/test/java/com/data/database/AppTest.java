@@ -11,6 +11,7 @@ import static org.junit.Assert.*;
 
 import java.io.StringWriter;
 import java.sql.SQLException;
+import java.util.List;
 import java.sql.ResultSet;
 
 /**
