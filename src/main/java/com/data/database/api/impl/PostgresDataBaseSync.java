@@ -116,7 +116,7 @@ public class PostgresDataBaseSync extends DataBaseSync {
         this.dbConn.setAutoCommit(true);
         long endtime = System.currentTimeMillis();
         logger.info(
-                String.format("insert into %s %d rows is done. cost %.3f seconds", tbName, totalAffectRows,(endtime - starttime) * 1.0 / 1000));
+                String.format("insert into %s %d rows has been completed, cost %.3f seconds", tbName, totalAffectRows,(endtime - starttime) * 1.0 / 1000));
         return true;
     };
 

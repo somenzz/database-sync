@@ -55,8 +55,7 @@ public class DataBaseSync implements DataSync {
             this.dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);// 读未提交
         }
         this.bufferRows = bufferRows;
-        String ipAndPort = this.dbUrl.split("/")[2];
-        logger.info(ipAndPort + " connection establied.");
+        logger.info(this.dbUrl + " connection establied.");
     }
 
     public String convertColumnType(String dbType, String colType) {
@@ -420,7 +419,7 @@ public class DataBaseSync implements DataSync {
         rowCount = 0;
         long endtime = System.currentTimeMillis();
         logger.info(
-                String.format("insert into %s %d rows is done. cost %.3f seconds", tbName,totalAffectRows,(endtime - starttime) * 1.0 / 1000));
+                String.format("insert into %s %d rows has been completed, cost %.3f seconds", tbName,totalAffectRows,(endtime - starttime) * 1.0 / 1000));
         return true;
     };
 
@@ -451,7 +450,6 @@ public class DataBaseSync implements DataSync {
     public boolean executeUpdateSQL(String sql) throws SQLException {
         PreparedStatement pStemt = this.dbConn.prepareStatement(sql);
         pStemt.executeUpdate();
-        this.dbConn.commit();
         return true;
     }
 

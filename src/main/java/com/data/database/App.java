@@ -1,12 +1,9 @@
 package com.data.database;
 
-import java.io.File;
-import java.io.Reader;
 import java.sql.*;
 
-import java.io.FileInputStream;
+import com.data.database.utils.Tools;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import com.data.database.api.impl.DataBaseSync;
 import com.data.database.api.impl.PostgresDataBaseSync;
@@ -24,7 +21,6 @@ import com.data.database.api.MyEnum.ColSizeTimes;
 // import org.apache.logging.log4j.LogManager;
 
 import org.apache.log4j.Logger;
-import org.checkerframework.checker.formatter.qual.ReturnsFormat;
 
 /**
  * Hello world!
@@ -37,48 +33,24 @@ public final class App {
     }
 
     /**
-     * Says hello to the world.
+     * 比较原表与目标表的表结构，生成表结构同步语句：添加、删除字段，扩长度等等。
      *
      * @param args The arguments of the program.
      * @throws ClassNotFoundException
      * @throws SQLException
      */
 
-    /**
-     * * 读取json文件，返回json串
-     *
-     * @param fileName
-     * @return
-     */
-    public static String readJsonFile(String fileName) {
-        String jsonStr = "";
-        try {
-            File jsonFile = new File(fileName);
-            Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
-            int ch = 0;
-            StringBuffer sb = new StringBuffer();
-            while ((ch = reader.read()) != -1) {
-                sb.append((char) ch);
-            }
-            reader.close();
-            jsonStr = sb.toString();
-            return jsonStr;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public static String compareColMetaData(String toType, String toSchema, String toTable, ResultSet fromColumnMeta,
             ResultSet toColumnMeta, ColSizeTimes colSizeTimes) throws SQLException {
         StringBuilder sb = new StringBuilder();
 
-        HashMap<String, HashMap<String, Integer>> fromColMap = new HashMap<String, HashMap<String, Integer>>();
-        HashMap<String, HashMap<String, Integer>> toColMap = new HashMap<String, HashMap<String, Integer>>();
+        HashMap<String, HashMap<String, Object>> fromColMap = new HashMap<String, HashMap<String, Object>>();
+        HashMap<String, HashMap<String, Object>> toColMap = new HashMap<String, HashMap<String, Object>>();
 
         while (fromColumnMeta.next()) {
-            HashMap<String, Integer> fromMap = new HashMap<String, Integer>();
+            HashMap<String, Object> fromMap = new HashMap<String, Object>();
             fromMap.put("DATA_TYPE", fromColumnMeta.getInt("DATA_TYPE"));
+            fromMap.put("TYPE_NAME", fromColumnMeta.getString("TYPE_NAME"));
             fromMap.put("COLUMN_SIZE", fromColumnMeta.getInt("COLUMN_SIZE"));
             fromMap.put("DECIMAL_DIGITS", fromColumnMeta.getInt("DECIMAL_DIGITS"));
             String colName = fromColumnMeta.getString("COLUMN_NAME");
@@ -86,27 +58,35 @@ public final class App {
         }
 
         while (toColumnMeta.next()) {
-            HashMap<String, Integer> toMap = new HashMap<String, Integer>();
+            HashMap<String, Object> toMap = new HashMap<String, Object>();
             toMap.put("DATA_TYPE", toColumnMeta.getInt("DATA_TYPE"));
+            toMap.put("TYPE_NAME", toColumnMeta.getString("TYPE_NAME"));
             toMap.put("COLUMN_SIZE", toColumnMeta.getInt("COLUMN_SIZE"));
             toMap.put("DECIMAL_DIGITS", toColumnMeta.getInt("DECIMAL_DIGITS"));
             String colName = toColumnMeta.getString("COLUMN_NAME");
             toColMap.put(colName.toUpperCase(), toMap);
         }
 
-        Iterator<Entry<String, HashMap<String, Integer>>> toIterator = toColMap.entrySet().iterator();
+        Iterator<Entry<String, HashMap<String, Object>>> toIterator = toColMap.entrySet().iterator();
+        Iterator<Entry<String, HashMap<String, Object>>> fromIterator = fromColMap.entrySet().iterator();
+
         while (toIterator.hasNext()) {
             // 以目标字段为基准进行检查
-            Entry<String, HashMap<String, Integer>> toEntry = toIterator.next();
+            Entry<String, HashMap<String, Object>> toEntry = toIterator.next();
             String toColName = toEntry.getKey();
-            HashMap<String, Integer> toMap = toEntry.getValue();
-            HashMap<String, Integer> fromMap = fromColMap.get(toColName);
+            HashMap<String, Object> toMap = toEntry.getValue();
+            HashMap<String, Object> fromMap = fromColMap.get(toColName);
 
+            if (fromMap == null) {
+                // 原表找不到字段，说明该字段被删除，删除的sql语句是通用的，执行完直接比较下一个
+                sb.append(String.format("alter table %s.%s drop column %s ;", toSchema, toTable, toColName));
+                continue;
+            }
             // 当两者不一致时以原表为准。
-            Integer colType = fromMap.get("DATA_TYPE");
+            Integer colType = (Integer) fromMap.get("DATA_TYPE");
             if (colType == Types.CHAR || colType == Types.VARCHAR) {// 处理字符串类型
-                Integer fromColLength = fromMap.get("COLUMN_SIZE") * colSizeTimes.getTimes();
-                Integer toColLength = toMap.get("COLUMN_SIZE");
+                Integer fromColLength = (Integer) fromMap.get("COLUMN_SIZE") * colSizeTimes.getTimes();
+                Integer toColLength = (Integer) toMap.get("COLUMN_SIZE");
                 if (fromColLength > toColLength) {
                     if ("db2".equals(toType) || "edw".equals(toType)) {
                         sb.append(String.format("alter table %s.%s alter column %s set data type varchar(%d);",
@@ -120,10 +100,10 @@ public final class App {
                     }
                 }
             } else if (colType == Types.DECIMAL) {// 处理小数字段类型
-                Integer fromColLength = fromMap.get("COLUMN_SIZE");
-                Integer fromColDigitLength = fromMap.get("DECIMAL_DIGITS");
-                Integer toColLength = toMap.get("COLUMN_SIZE");
-                Integer toColDigitLength = toMap.get("DECIMAL_DIGITS");
+                Integer fromColLength = (Integer) fromMap.get("COLUMN_SIZE");
+                Integer fromColDigitLength = (Integer) fromMap.get("DECIMAL_DIGITS");
+                Integer toColLength = (Integer) toMap.get("COLUMN_SIZE");
+                Integer toColDigitLength = (Integer) toMap.get("DECIMAL_DIGITS");
 
                 if (fromColLength > toColLength || fromColDigitLength > toColDigitLength) {
                     if ("db2".equals(toType) || "edw".equals(toType)) {
@@ -138,9 +118,44 @@ public final class App {
                     }
                 }
             }
+        }
+
+        // 自动增加字段，以原表为主
+        while (fromIterator.hasNext()) {
+            Entry<String, HashMap<String, Object>> fromEntry = fromIterator.next();
+            String fromColName = fromEntry.getKey();
+            HashMap<String, Object> fromMap = fromEntry.getValue();
+            HashMap<String, Object> toMap = toColMap.get(fromColName);
+
+            if (toMap == null) {
+
+                // ALTER TABLE orders ADD COLUMN customer_id INT;
+                // ALTER TABLE vendors ADD COLUMN vendor_group INT NOT NULL;
+                // ALTER TABLE customers ADD COLUMN fax VARCHAR,
+                // ALTER TABLE members ADD birth_date DATE NOT NULL;
+                String typeName = (String) fromMap.get("TYPE_NAME");
+                Integer colType = (Integer) fromMap.get("DATA_TYPE");
+                Integer fromColLength = (Integer) fromMap.get("COLUMN_SIZE");
+                Integer fromColDigitLength = (Integer) fromMap.get("DECIMAL_DIGITS");
+                switch (colType) {
+                    case Types.CHAR:
+                    case Types.VARCHAR:
+                        sb.append(String.format("alter table %s.%s add column %s varchar(%d);", toSchema, toTable,
+                                fromColName, fromColLength * colSizeTimes.getTimes()));
+                        break;
+                    case Types.DECIMAL:
+                        sb.append(String.format("alter table %s.%s add column %s decimal(%d,%d);", toSchema, toTable,
+                                fromColName, fromColLength, fromColDigitLength));
+                        break;
+                    default:
+                        sb.append(String.format("alter table %s.%s add column %s %s;", toSchema, toTable, fromColName,
+                                typeName));
+                }
+            }
 
         }
         return sb.toString();
+
     }
 
     public static void printHelp() {
@@ -151,8 +166,8 @@ public final class App {
         System.out.println("        --help or -h     :print help info then exit");
         System.out.println(
                 "        --simple or -s   :use insert into table A select * from B mode, ignore table's structure");
-        System.out.println("        --from_fields={col1,col2} or -ff={col3,col4}   :specify from fields");
-        System.out.println("        --to_fields={col1,col2} or -tf={col3,col4}   :specify to fields");
+        System.out.println("        --from_fields=col1,col2 or -ff=col3,col4   :specify from fields");
+        System.out.println("        --to_fields=col1,col2 or -tf=col3,col4   :specify to fields");
         System.out.println("        --no-pgcopy or -np : will not use postgreSQL's copy mode.");
 
     }
@@ -206,7 +221,7 @@ public final class App {
         String toDb = argList.get(3);
         String toSchema = argList.get(4);
         String toTable = argList.get(5);
-        String whereClause = argList.size() == 7 ? argList.get(6) : "";
+        String whereClause = argList.size() >= 7 ? argList.get(6) : "";
 
         if (fromDb.equalsIgnoreCase(toDb) && fromSchema.equalsIgnoreCase(toSchema)
                 && fromTable.equalsIgnoreCase(toTable)) {
@@ -216,9 +231,16 @@ public final class App {
 
         whereClause = whereClause.replaceAll("(?i)where", "");
 
-        logger.info(String.format(
-                "Your input params are:\nfromDb = %-10s\tfromSchema = %-10s\tfromTable = %-10s\ntoDb = %-10s\ttoSchema = %-10s\ttoTable = %-10s\nwhereClause=%-10s",
-                fromDb, fromSchema, fromTable, toDb, toSchema, toTable, whereClause));
+        String paramsPrint = String.format(
+                "Your input params are:\n"
+                        + "<=== fromDb=%s, fromSchema=%s, fromTable=%s, fromTableFields=%s, whereClause=%s\n"
+                        + "===> toDb=%s, toSchema=%s, toTable=%s, toTableFields=%s",
+                fromDb, fromSchema, fromTable,
+                fromTableFields.size() > 0 ? String.join(",", fromTableFields) : "[toTableFields]", whereClause, toDb,
+                toSchema, toTable, toTableFields.size() > 0 ? String.join(",", toTableFields) : "*");
+
+        logger.info(paramsPrint);
+        logger.info("argList=" + String.join(",", argList));
         // String fromDb = "wbsj";
         // String fromSchema = "wbsj";
         // String fromTable = "zz_test";
@@ -227,7 +249,7 @@ public final class App {
         // String toTable = "zz_test";
         // String whereClause = null;
 
-        JSONObject jobj = JSON.parseObject(readJsonFile("./config/config.json"));
+        JSONObject jobj = JSON.parseObject(Tools.readJsonFile("./config/config.json"));
         String fromJDBC_DRIVER = jobj.getJSONObject(fromDb).getString("driver");
         String fromDB_URL = jobj.getJSONObject(fromDb).getString("url");
         String fromUSER = jobj.getJSONObject(fromDb).getString("user");
@@ -260,7 +282,8 @@ public final class App {
 
             // 原表必须存在
             if (!fromDataBase.existsTable(fromSchema, fromTable)) {
-                logger.info(String.format("fromTable -> (%s) %s.%s not exists! Program exit.", fromDb, fromSchema, fromTable));
+                logger.info(String.format("fromTable -> (%s) %s.%s not exists! Program exit.", fromDb, fromSchema,
+                        fromTable));
                 return;
             }
 
@@ -268,7 +291,8 @@ public final class App {
                 // 处理简单模式，不考虑表结构
                 // 目标表必须存在
                 if (!toDataBase.existsTable(toSchema, toTable)) {
-                    logger.info(String.format("toTable -> (%s) %s.%s not exists! Program exit.", toDb, toSchema, toTable));
+                    logger.info(
+                            String.format("toTable -> (%s) %s.%s not exists! Program exit.", toDb, toSchema, toTable));
                     return;
                 }
 
@@ -320,7 +344,9 @@ public final class App {
                 ResultSet toColMeta = toDataBase.getColMetaData(toSchema, toTable);
                 /* 同步扩充字段长度 */
                 String alterSql = compareColMetaData(toType, toSchema, toTable, fromColMeta, toColMeta, colTimes);
-                for (String sql : alterSql.split(";")) {
+                String[] alterSqlArray = alterSql.split(";");
+                for (int i = alterSqlArray.length - 1; i >= 0; i--) {
+                    String sql = alterSqlArray[i];
                     if (!sql.isEmpty()) {
                         logger.info(sql);
                         try {
