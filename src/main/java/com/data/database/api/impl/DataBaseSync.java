@@ -242,7 +242,7 @@ public class DataBaseSync implements DataSync {
                 // varchar || char
                 columnSize = columnSize * lenSize.getTimes();
                 columnTypeText = columnType + "(" + columnSize + ")";
-            } else if (dataType == Types.DECIMAL) {
+            } else if (dataType == Types.DECIMAL || dataType == Types.NUMERIC) {
                 columnTypeText = columnType + "(" + columnSize + "," + digitSize + ")";
             } else {
                 columnTypeText = columnType;
