@@ -124,9 +124,9 @@ options:
 
 1、其中 options 参数解释如下：
 
-`--sync-ddl` 或者 `-sd` : 加入该参数会自动同步表结构。
-`--from_fields=col1,col2` 或者 `-ff=col1,col2` : 指定原表的字段序列，注意 = 前后不能有空格。
-`--to_fields=col3,col4` 或者 `-tf=col3,col4` : 指定目标表的字段序列，注意 = 前后不能有空格。
+- `--sync-ddl` 或者 `-sd` : 加入该参数会自动同步表结构。
+- `--from_fields=col1,col2` 或者 `-ff=col1,col2` : 指定原表的字段序列，注意 = 前后不能有空格。
+- `--to_fields=col3,col4` 或者 `-tf=col3,col4` : 指定目标表的字段序列，注意 = 前后不能有空格。
 
 2、whereClause 表示 where 条件，用于增量更新，程序再插入数据前先按照 where 条件进行清理数据，然后按照 where 条件从原表进行读取数据。 whereClause 最好使用双引号包起来，表示一个完整的参数。如："jyrq='2020-12-31'"
 
