@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+  app:
+    image: java:latest
+    working_dir: /app
+    volumes:
+      - ./release:/app
+    command: /bin/bash -c "while true;do sleep 1;done" #为了让容器不退出，写个循环 sleep
+  mysql:
+    image: somenzz/mysql:8.0 #含有测试数据
+    environment: 
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: root

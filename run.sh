@@ -1,0 +1,1 @@
+/path/jdk1.8.0_231/bin/java -jar database-sync-1.2.jar "$@"
