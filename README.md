@@ -37,20 +37,20 @@ Creating database-sync_mysql_1    ... done
 ```
 这样三个容器就启动了，使用 `docker ps -a |grep database-sync` 可以查看到三个正在运行的容器：
 
-![](https://tva1.sinaimg.cn/large/008eGmZEgy1govcml0u7dj31xq07074x.jpg)
+![](images/1.jpg)
 
 现在直接使用 `docker exec -i database-sync_app_1 java -jar database-sync-1.3.jar` 来执行程序：
 
-![](https://tva1.sinaimg.cn/large/008eGmZEgy1govcoiltcnj31nc0b2js0.jpg)
+![](images/2.jpg)
 
 mysql 容器已有测试数据，`release/config/config.json` 已经配置好了数据库的连接，因此可以直接试用，以下演示的是从 mysql 复制表和数据到 postgres：
 
-1. 全量复制，自动建表：
+#### 1. 全量复制，自动建表：
 
 ```sh
 docker exec -i database-sync_app_1 java -jar database-sync-1.3.jar mysql_test testdb somenzz_users postgres_test public users --sync-ddl
 ```
-![](https://tva1.sinaimg.cn/large/008eGmZEgy1govcvnj1qij31bl0u0q8q.jpg)
+![](images/3.jpg)
 
 
 如果你不想每次都敲 `docker exec -i database-sync_app_1` ，可以进入容器内部执行：
@@ -62,19 +62,19 @@ config	database-sync-1.3.jar  lib  logs
 root@063b1dc76fe1:/app# java -jar database-sync-1.3.jar mysql_test testdb somenzz_users postgres_test public users -sd
 ```
 
-2. 增量复制：
+#### 2. 增量复制：
 
 ```sh
 root@063b1dc76fe1:/app# java -jar database-sync-1.3.jar mysql_test testdb somenzz_users postgres_test public zz_users "create_at >= '2018-01-09'"
 ```
-![](https://tva1.sinaimg.cn/large/008eGmZEgy1govpz9o5v2j327a0sygph.jpg)
+![](images/4.jpg)
 
-3. 指定字段：
+#### 3. 指定字段：
 
 ```sh
 root@063b1dc76fe1:/app# java -jar database-sync-1.3.jar mysql_test testdb somenzz_users postgres_test public zz_users -ff="user_id,name,age" -tf="user_id,name,age" "create_at >= '2018-01-09'"
 ```
-![](https://tva1.sinaimg.cn/large/008eGmZEgy1govq38gxfnj32go0t4jv7.jpg)
+![](images/5.jpg)
 
 
 
@@ -109,13 +109,14 @@ drwxrwxr-x 2 aaron aaron  4096 Feb 19 17:07 config
 Usage: 
 java -jar database-sync-1.0.jar [options] {fromDB} {fromSchema} {fromTable} {toDB} {toSchema} {toTable} [whereClause]
 options:
-        --version or -v     :print version then exit
-        --help or -h        :print help info then exit
-        --sync-ddl or -sd   :auto synchronize table structure
-        --from_fields=col1,col2 or -ff=col3,col4   :specify from fields
-        --to_fields=col1,col2 or -tf=col3,col4   :specify to fields
-        --no-feture or -nf  :will not use database's feture
+        -v or --version                            :print version then exit
+        -h or --help                               :print help info then exit
+        -sd or --sync-ddl                          :auto synchronize table structure
+        -ff=col1,col2 or --from-fields=col1,col2   :specify from fields
+        -tf=col3,col4 or --to-fields=col3,col4     :specify to fields
+        --no-feature or -nf                        :will not use database's feature
 ```
+
 
 帮助说明：
 
@@ -132,7 +133,7 @@ options:
 
 {} 大括号里的内容表示必填。
 
-`fromDb` 是指配置在 config.json 的数据库信息，假如有以下配置文件：
+`fromDb` 是指配置在 config.json 的数据库信息的键，假如有以下配置文件：
 
 ```json
 {
@@ -164,12 +165,7 @@ fromDb、toDb 可以是 aarondb 或者 postgres。
 - `toTable` 写入数据表的表名，必须提供，当写入表不存在时，自动按读取表的表结构创建，可以和 fromTable 不同。
 
 
-## 增量更新
-```sh
-java -jar database-sync.jar {fromDb} {fromSchema} {fromTable} {toDb} {toSchema} {toTable} [whereClause]
-```
-与全量更新的唯一区别是可以提供 where 条件，程序先按 where 条件自动清理数据，再写入数据。
-
+**全量、增量、指定字段的使用样例请参考 Docker 方式。** 
 
 ## 配置文件说明
 
