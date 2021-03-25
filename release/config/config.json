@@ -31,9 +31,9 @@
     "oracle_test":{
         "type":"oracle",
         "driver":"oracle.jdbc.driver.OracleDriver",
-        "url":"jdbc:oracle:thin:@192.168.168.196:1521:orcl",
-        "user": "ocrm",
-        "password":"ocrm",
+        "url":"jdbc:oracle:thin:@192.168.168.111:1521:oracledb",
+        "user": "oraclem",
+        "password":"oraclem",
         "encoding": "utf-8"
     },
 
