@@ -180,7 +180,7 @@ fromDb、toDb 可以是 aarondb 或者 postgres。
         "url":"jdbc:db2://192.168.1.*:50000/wbsj",
         "user": "****",
         "password":"****",
-         "tbspace_ddl": "/*这里可以放置指定表空间的语句*/"
+        "tbspace_ddl": "/*这里可以放置指定表空间的语句*/",
         "encoding":"utf-8"
     },
 

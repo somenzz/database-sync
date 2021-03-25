@@ -38,5 +38,5 @@
     },
 
     
-    "buffer-rows": 1000
+    "buffer-rows": 10000
 }
