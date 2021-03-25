@@ -22,7 +22,8 @@ import com.google.common.base.Joiner;
 import com.data.database.utils.Tools;
 import com.data.database.api.MyEnum.ColSizeTimes;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class DataBaseSync implements DataSync {
 
@@ -37,7 +38,7 @@ public class DataBaseSync implements DataSync {
     protected final String dbPass;
     protected Connection dbConn;
     protected final String dbType;
-    protected final Logger logger = Logger.getLogger(DataBaseSync.class);
+    protected final Logger logger = LogManager.getLogger(DataBaseSync.class);
     protected final Integer bufferRows;
 
     protected HashMap<String,String> mysqlMap = new HashMap<>();

@@ -14,14 +14,15 @@ import java.util.Iterator;
 import java.util.List;
 import com.data.database.api.MyEnum.ColSizeTimes;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * 数据库表同步主程序
  */
 public final class App {
 
-    private static final Logger logger = Logger.getLogger(App.class);
+    private static final Logger logger = LogManager.getLogger(App.class);
 
     private String fromDBId;   //源数据库标识符
     private String fromSchema; //源数据库中的模式名
@@ -298,7 +299,7 @@ public final class App {
     }
 
     public static void main(String[] args) throws ClassNotFoundException, IOException, SQLException {
-
+        
         App app = new App();
         if(!app.handleCommandLineArgs(args)){
             return;
