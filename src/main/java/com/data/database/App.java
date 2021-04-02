@@ -299,7 +299,6 @@ public final class App {
     }
 
     public static void main(String[] args) throws ClassNotFoundException, IOException, SQLException {
-        
         App app = new App();
         if(!app.handleCommandLineArgs(args)){
             return;
