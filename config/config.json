@@ -1,0 +1,42 @@
+{
+    "mysql_test": {
+        "type": "mysql",
+        "driver": "com.mysql.cj.jdbc.Driver",
+        "url": "jdbc:mysql://mysql:3306/testdb",
+        "user": "root",
+        "password": "root",
+        "encoding": "utf-8"
+    },
+
+    "postgres_test": {
+        "type": "postgres",
+        "driver": "org.postgresql.Driver",
+        "url": "jdbc:postgresql://postgres:5432/postgres",
+        "user": "postgres",
+        "password": "root",
+        "tbspace_ddl": "/*WITH (compression=no, orientation=orc, version=0.12)\ntablespace hdfs\n*/",
+        "encoding": "utf-8"
+    },
+
+    "dw_test": {
+        "type": "dw",
+        "driver": "com.ibm.db2.jcc.DB2Driver",
+        "url": "jdbc:db2://192.168.168.169:60000/dwdb",
+        "user": "dw",
+        "password": "dw",
+        "tbspace_ddl": "IN TBS_DATA\nINDEX IN TBS_INDEX\n",
+        "encoding": "gbk"
+    },
+
+    "oracle_test":{
+        "type":"oracle",
+        "driver":"oracle.jdbc.driver.OracleDriver",
+        "url":"jdbc:oracle:thin:@192.168.168.196:1521:orcl",
+        "user": "ocrm",
+        "password":"ocrm",
+        "encoding": "utf-8"
+    },
+
+    
+    "buffer-rows": 1000
+}
